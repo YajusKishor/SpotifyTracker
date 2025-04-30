@@ -11,7 +11,7 @@ import se.michaelthelin.spotify.model_objects.specification.PlaylistTrack;
 import se.michaelthelin.spotify.requests.data.playlists.GetListOfUsersPlaylistsRequest;
 import se.michaelthelin.spotify.requests.data.playlists.GetPlaylistRequest;
 
-import javax.swing.*;
+
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
@@ -34,13 +34,28 @@ public class Main {
 	public static void main(String[] args) {
 		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-			scheduler.scheduleAtFixedRate(new Notifier(), 0, 5, TimeUnit.MINUTES);
+		scheduler.scheduleAtFixedRate(new Notifier(), 0, 5, TimeUnit.MINUTES);
 	}
 
 }
 
 class Notifier implements Runnable {
 	public void run() {
+		/**
+		 * The `run` method is executed periodically by the `ScheduledExecutorService`.
+		 * It performs the following tasks:
+		 *
+		 * 1. Retrieves an access token from the Spotify API using the provided client credentials.
+		 * 2. Fetches the user's playlists and determines the latest track added across all playlists.
+		 * 3. Checks if the latest track was added within the last 5 minutes.
+		 * 4. If a new track is detected, it displays a notification with details about the track,
+		 *    the playlist it was added to, and the time it was added.
+		 *
+		 * Exceptions:
+		 * - Throws a `RuntimeException` if there is an issue retrieving the access token or
+		 *   parsing the date of the latest track.
+		 */
+
 		// Set the Spotify API credentials
 		String clientId = "d32e2a568a1646f9a9eef6ec28eb7670";
 		String clientSecret = "b0a94132188a4453b6dab447db6b66e6";
@@ -77,6 +92,21 @@ class Notifier implements Runnable {
 
 
 	static String getAccessToken(String clientId, String clientSecret) throws URISyntaxException, IOException, InterruptedException {
+		/**
+		 * Retrieves an access token from the Spotify API using client credentials.
+		 *
+		 * This method sends a POST request to the Spotify Accounts service with the
+		 * provided client ID and client secret to obtain an access token. The token
+		 * is required to authenticate API requests to the Spotify Web API.
+		 *
+		 * @param clientId The Spotify API client ID.
+		 * @param clientSecret The Spotify API client secret.
+		 * @return The access token as a String.
+		 * @throws URISyntaxException If the URI for the token endpoint is invalid.
+		 * @throws IOException If an I/O error occurs during the HTTP request.
+		 * @throws InterruptedException If the HTTP request is interrupted.
+		 */
+
 		String form = "grant_type=client_credentials" +
 				"&client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8) +
 				"&client_secret=" + URLEncoder.encode(clientSecret, StandardCharsets.UTF_8);
@@ -95,6 +125,21 @@ class Notifier implements Runnable {
 
 
 	private static void notify(AbstractMap.SimpleEntry<PlaylistTrack, Playlist> latestTrack) {
+		/**
+		 * Displays a notification for a newly added track in a playlist.
+		 *
+		 * This method creates a graphical notification window that shows the details
+		 * of the newly added track, including the track name, the playlist it was added to,
+		 * and the time it was added. It also provides a button to open the playlist in Spotify.
+		 *
+		 * The notification window automatically closes after 10 seconds or when the user
+		 * manually closes it.
+		 *
+		 * @param latestTrack A key-value pair where the key is the latest track added
+		 *                    (`PlaylistTrack`) and the value is the playlist (`Playlist`)
+		 *                    to which the track was added.
+		 */
+
 		// Create a new frame
 		Frame frame = new Frame("New Track Added");
 		frame.setSize(300, 200);
@@ -104,7 +149,7 @@ class Notifier implements Runnable {
 		frame.setAlwaysOnTop(true);
 
 
-		// Create a new label
+		// Create new labels
 		Label label = new Label("New Track Added: " + latestTrack.getKey().getTrack().getName());
 		label.setAlignment(Label.CENTER);
 		label.setSize(300, 100);
@@ -126,7 +171,7 @@ class Notifier implements Runnable {
 			}
 		});
 
-		// Add the label and button to the frame
+		// Add the labels and button to the frame
 		frame.add(label);
 		frame.add(label2);
 		frame.add(label3);
@@ -144,6 +189,7 @@ class Notifier implements Runnable {
 			@Override
 			public void run() {
 				try {
+					// Open the playlist in Spotify
 					Desktop.getDesktop().browse(new URI(latestTrack.getValue().getUri()));
 				} catch (IOException | URISyntaxException ex) {
 					ex.printStackTrace();
@@ -152,10 +198,26 @@ class Notifier implements Runnable {
 			}
 		}, 10000);
 
+		// Print the notification to the console
 		System.out.println("New Track Added: " + latestTrack.getKey().getTrack().getName() + " in " + latestTrack.getValue().getName() + " - " + latestTrack.getKey().getAddedAt());
 	}
 
 	private static Boolean checkIfUpdated(AbstractMap.SimpleEntry<PlaylistTrack, Playlist> latestTrack) throws java.text.ParseException {
+		/**
+		 * Checks if the latest track was added within the last 5 minutes.
+		 *
+		 * This method compares the `added_at` timestamp of the latest track with the
+		 * current time to determine if the track was added recently. The comparison
+		 * is done by parsing the timestamps into `Date` objects and calculating the
+		 * time difference in minutes.
+		 *
+		 * @param latestTrack A key-value pair where the key is the latest track added
+		 *                    (`PlaylistTrack`) and the value is the playlist (`Playlist`)
+		 *                    to which the track was added.
+		 * @return `true` if the track was added within the last 5 minutes, otherwise `false`.
+		 * @throws java.text.ParseException If there is an error parsing the date strings.
+		 */
+
 		String added_at = String.valueOf(latestTrack.getKey().getAddedAt());
 
 		Date now = new Date();
@@ -171,6 +233,20 @@ class Notifier implements Runnable {
 	}
 
 	private static AbstractMap.SimpleEntry<PlaylistTrack, Playlist> getLatestAddedTrack(GetListOfUsersPlaylistsRequest getListOfUsersPlaylistsRequest, SpotifyApi spotifyApi) {
+		/**
+		 * Retrieves the latest track added across all user playlists.
+		 *
+		 * This method fetches the user's playlists using the Spotify API, retrieves the latest track
+		 * added to each playlist, and sorts them by the `added_at` timestamp in descending order.
+		 * It then returns the most recently added track along with its associated playlist.
+		 *
+		 * @param getListOfUsersPlaylistsRequest The request object to fetch the user's playlists.
+		 * @param spotifyApi The Spotify API client instance.
+		 * @return A key-value pair where the key is the latest track added (`PlaylistTrack`) and
+		 *         the value is the playlist (`Playlist`) to which the track was added.
+		 *         Returns `null` if an error occurs or no tracks are found.
+		 */
+
 		try {
 			final Paging<PlaylistSimplified> playlistSimplifiedPaging = getListOfUsersPlaylistsRequest.execute();
 
@@ -195,6 +271,23 @@ class Notifier implements Runnable {
 	}
 
 	private static ArrayList<AbstractMap.SimpleEntry<PlaylistTrack, Playlist>> getLatestTracks(PlaylistSimplified[] playlists, SpotifyApi spotifyApi) throws IOException, SpotifyWebApiException, ParseException {
+		/**
+		 * Retrieves the latest track added to each playlist.
+		 *
+		 * This method iterates through the provided playlists, fetches the full details of each playlist
+		 * using the Spotify API, and retrieves the most recently added track from each playlist.
+		 * It then returns a list of key-value pairs where the key is the latest track (`PlaylistTrack`)
+		 * and the value is the corresponding playlist (`Playlist`).
+		 *
+		 * @param playlists An array of simplified playlists (`PlaylistSimplified`) to process.
+		 * @param spotifyApi The Spotify API client instance.
+		 * @return An `ArrayList` of key-value pairs where the key is the latest track added
+		 *         (`PlaylistTrack`) and the value is the playlist (`Playlist`) to which the track belongs.
+		 * @throws IOException If an I/O error occurs during the API request.
+		 * @throws SpotifyWebApiException If the Spotify API request fails.
+		 * @throws ParseException If there is an error parsing the response.
+		 */
+
 		// Array of Latest Tracks
 		ArrayList<AbstractMap.SimpleEntry<PlaylistTrack, Playlist>> latestTracks = new ArrayList<>();
 		for (PlaylistSimplified p : playlists) {
