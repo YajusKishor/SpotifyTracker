@@ -100,7 +100,8 @@ class Notifier implements Runnable {
 		frame.setSize(300, 200);
 		frame.setLayout(new FlowLayout());
 
-
+		// Set the frame to be always on top
+		frame.setAlwaysOnTop(true);
 
 
 		// Create a new label
