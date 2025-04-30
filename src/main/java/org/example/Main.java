@@ -11,6 +11,7 @@ import se.michaelthelin.spotify.model_objects.specification.PlaylistTrack;
 import se.michaelthelin.spotify.requests.data.playlists.GetListOfUsersPlaylistsRequest;
 import se.michaelthelin.spotify.requests.data.playlists.GetPlaylistRequest;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
@@ -99,9 +100,7 @@ class Notifier implements Runnable {
 		frame.setSize(300, 200);
 		frame.setLayout(new FlowLayout());
 
-		// Set the icon for the frame
-		Image icon = Toolkit.getDefaultToolkit().getImage("src/main/resources/spotify.png");
-		frame.setIconImage(icon);
+
 
 
 		// Create a new label
