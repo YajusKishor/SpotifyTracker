@@ -57,8 +57,8 @@ class Notifier implements Runnable {
 		 */
 
 		// Set the Spotify API credentials
-		String clientId = "d32e2a568a1646f9a9eef6ec28eb7670";
-		String clientSecret = "b0a94132188a4453b6dab447db6b66e6";
+		String clientId = "<your_client_id>";
+		String clientSecret = "<your_client_secret>";
 
 		String accessToken;
 		try {
@@ -67,7 +67,7 @@ class Notifier implements Runnable {
 			throw new RuntimeException(e);
 		}
 
-		String userID = "31rv3k7dfwpeggfpjs7bdssggpmm";
+		String userID = "<desired_user_id>";
 
 		SpotifyApi spotifyApi = new SpotifyApi.Builder()
 				.setAccessToken(accessToken)
